@@ -138,11 +138,13 @@ Secondhand is a small Rust workspace on top of the [VectorCraft](https://github.
 engine, which reads the FreeHand file and writes the `.ai`/PDF/SVG:
 
 ```
-crates/secondhand-core   finding files, converting one at a time, safe naming, the summary
-crates/secondhand-cli    secondhand-cli [--format ai|pdf|svg] [--json REPORT.json] PATH…
-app/                   the desktop app (Tauri 2): ui/ is plain HTML/JS, src-tauri/ the Rust side
-tools/make-fixtures    writes the synthetic test drawings in fixtures/
-scripts/check_outputs.py  validates outputs with qpdf (via pikepdf) and lists PDF layers
+crates/secondhand-core    finding files, converting one at a time, safe naming, the summary
+crates/secondhand-cli     secondhand-cli [--format ai|pdf|svg] [--json REPORT.json] PATH…
+app/                      the desktop app (Tauri 2): ui/ is plain HTML/JS, src-tauri/ the Rust side
+tools/make-fixtures       writes the synthetic test drawings in fixtures/
+scripts/check_outputs.py  validates outputs with qpdf (via pikepdf), and checks each .ai's
+                          layers (one PDF layer per layer, top-first order, hidden ones off)
+                          and page boxes
 ```
 
 ```sh
@@ -174,6 +176,11 @@ Once #2075 is merged, point the three `vectorcraft-*` lines at upstream, using t
 ```toml
 vectorcraft-engine = { git = "https://github.com/storytold/vectorcraft", rev = "<merge commit>" }
 ```
+
+CI also builds the app and the command-line tool on Linux, for testing; they are kept as workflow
+artifacts, not release downloads:
+
+<p align="center"><img src="shots/linux-batch-finished.png" width="380" alt="Secondhand on Linux after converting the test drawings"></p>
 
 ## License
 
