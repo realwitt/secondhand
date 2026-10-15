@@ -56,6 +56,7 @@ jobs:
           rm -rf "$RUNNER_TEMP/gui" && cp -r fixtures "$RUNNER_TEMP/gui"
           ./target/release/lifeboat --batch --report "$RUNNER_TEMP/gui.json" "$RUNNER_TEMP/gui" || true
           python scripts/check_outputs.py "$RUNNER_TEMP/gui.json" --expect 9,4,1
+          mkdir -p gui-bin && cp target/release/lifeboat gui-bin/lifeboat-gui-linux-x64
       - name: Screenshot of the window (Xvfb)
         run: |
           mkdir -p shots-ci
@@ -70,6 +71,7 @@ jobs:
           path: |
             dist/
             shots-ci/
+            gui-bin/
 
   macos:
     name: macOS (universal .app and .dmg)
@@ -142,6 +144,7 @@ jobs:
       - run: npm install -g @tauri-apps/cli@2; pip install pikepdf
       - name: Build the installers
         working-directory: app/src-tauri
+        shell: bash
         run: tauri build --bundles nsis,msi
       - name: Collect
         shell: pwsh
