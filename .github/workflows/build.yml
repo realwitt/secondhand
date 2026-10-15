@@ -60,10 +60,15 @@ jobs:
       - name: Screenshot of the window (Xvfb)
         run: |
           mkdir -p shots-ci
+          rm -rf "$RUNNER_TEMP/shot" && cp -r fixtures "$RUNNER_TEMP/shot"
           xvfb-run -a -s "-screen 0 800x600x24" bash -c '
             ./target/release/lifeboat & pid=$!
             sleep 10
             import -window root shots-ci/linux-window.png
+            kill $pid || true
+            ./target/release/lifeboat "$RUNNER_TEMP/shot" & pid=$!
+            sleep 12
+            import -window root shots-ci/linux-batch.png
             kill $pid || true'
       - uses: actions/upload-artifact@v4
         with:
@@ -123,6 +128,11 @@ jobs:
           sleep 10
           screencapture -x shots-ci/macos-screen.png
           kill $pid || true
+          rm -rf "$RUNNER_TEMP/shot" && cp -r fixtures "$RUNNER_TEMP/shot"
+          "$BIN" "$RUNNER_TEMP/shot" & pid=$!
+          sleep 12
+          screencapture -x shots-ci/macos-batch.png
+          kill $pid || true
       - uses: actions/upload-artifact@v4
         with:
           name: macos
@@ -180,7 +190,14 @@ jobs:
           $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
           $g = [System.Drawing.Graphics]::FromImage($bmp)
           $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
-          $bmp.Save("shots-ci/windows-screen.png")
+          $bmp.Save("$PWD/shots-ci/windows-screen.png")
+          Stop-Process -Id $p.Id -Force
+          $shot = Join-Path $env:RUNNER_TEMP "shot"
+          Copy-Item -Recurse fixtures $shot
+          $p = Start-Process -FilePath dist/Lifeboat_0.1.0_x64_portable.exe -ArgumentList @("`"$shot`"") -PassThru
+          Start-Sleep -Seconds 12
+          $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("$PWD/shots-ci/windows-batch.png")
           Stop-Process -Id $p.Id -Force
       - uses: actions/upload-artifact@v4
         with:
