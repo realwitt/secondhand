@@ -75,7 +75,8 @@ function onSummary(s) {
   $('statusText').textContent = 'Finished';
   $('summaryTitle').textContent = `${plural(c, 'file', 'files')} converted` + (k ? `, ${k} skipped` : '') + (f ? `, ${f} failed` : '');
   $('summaryNote').textContent = (c ? 'Each new file is next to its original. ' : '') +
-    (s.ignored_in_folders ? `${plural(s.ignored_in_folders, 'other file', 'other files')} in the folders weren't FreeHand drawings and were left alone.` : '');
+    (s.ignored_in_folders === 1 ? "1 other file in the folders wasn't a FreeHand drawing and was left alone."
+      : s.ignored_in_folders ? `${s.ignored_in_folders} other files in the folders weren't FreeHand drawings and were left alone.` : '');
   $('openFolder').hidden = !s.output_folder;
   $('summary').hidden = false;
 }

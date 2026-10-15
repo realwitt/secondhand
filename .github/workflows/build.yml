@@ -58,6 +58,9 @@ jobs:
           python scripts/check_outputs.py "$RUNNER_TEMP/gui.json" --expect 9,4,1
           mkdir -p gui-bin && cp target/release/lifeboat gui-bin/lifeboat-gui-linux-x64
       - name: Screenshot of the window (Xvfb)
+        env:
+          WEBKIT_DISABLE_COMPOSITING_MODE: "1"
+          LIBGL_ALWAYS_SOFTWARE: "1"
         run: |
           mkdir -p shots-ci
           rm -rf "$RUNNER_TEMP/shot" && cp -r fixtures "$RUNNER_TEMP/shot"
@@ -70,6 +73,7 @@ jobs:
             sleep 12
             import -window root shots-ci/linux-batch.png
             kill $pid || true'
+          ls -la shots-ci
       - uses: actions/upload-artifact@v4
         with:
           name: linux
