@@ -1,0 +1,40 @@
+name: Website
+
+on:
+  push:
+    branches: [main]
+    paths: ["site/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Publish the website
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the download links point at real release files
+        run: |
+          set -e
+          for f in $(grep -oh 'releases/latest/download/[^"]*' site/index.html site/main.js | sed 's|.*download/||' | sort -u); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' -I -L "https://github.com/realwitt/secondhand/releases/latest/download/$f")
+            echo "$code $f"
+            [ "$code" = 200 ] || { echo "::error::$f is not on the latest release"; exit 1; }
+          done
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4

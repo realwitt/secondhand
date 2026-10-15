@@ -4,6 +4,8 @@
 (11) documents and templates and saves a copy that current Adobe Illustrator opens directly. It
 also saves PDF or SVG if you'd rather.
 
+**Website: [realwitt.github.io/secondhand](https://realwitt.github.io/secondhand/)**
+
 ## Download and install
 
 **[⬇ Download the latest version](https://github.com/realwitt/secondhand/releases/latest)**
