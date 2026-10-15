@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lifeboat</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main>
+    <section id="drop" class="drop" tabindex="0">
+      <div class="ring" aria-hidden="true"></div>
+      <h1>Drop FreeHand files or folders here</h1>
+      <p class="sub">Opens FreeHand 8, 9, 10 and MX drawings and saves a copy next to each one.<br>Your original files are never changed.</p>
+      <div class="buttons">
+        <button id="choose" class="primary">Choose files…</button>
+        <button id="chooseFolder">Choose a folder…</button>
+      </div>
+      <label class="fmt">Save as
+        <select id="format">
+          <option value="ai" selected>Illustrator-compatible .ai</option>
+          <option value="pdf">PDF</option>
+          <option value="svg">SVG (one file per page)</option>
+        </select>
+      </label>
+    </section>
+
+    <section id="work" hidden>
+      <div class="status"><span id="statusText">Converting…</span> <span id="count"></span></div>
+      <progress id="bar" max="1" value="0"></progress>
+      <ol id="files" class="files"></ol>
+      <div id="summary" class="summary" hidden>
+        <h2 id="summaryTitle"></h2>
+        <p id="summaryNote" class="sub"></p>
+        <div class="buttons">
+          <button id="openFolder" class="primary" hidden>Open output folder</button>
+          <button id="copyReport">Copy report</button>
+          <button id="again">Convert more…</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>Everything happens on this computer. Nothing is uploaded.</footer>
+<script src="main.js"></script>
+</body>
+</html>

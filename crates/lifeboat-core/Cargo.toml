@@ -1,0 +1,17 @@
+[package]
+name = "lifeboat-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Batch conversion of FreeHand 8-MX drawings to PDF-compatible .ai, PDF or SVG, on top of the VectorCraft engine"
+
+[dependencies]
+vectorcraft-engine = { workspace = true }
+vectorcraft-freehand = { workspace = true }
+vectorcraft-format = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+vectorcraft-freehand = { workspace = true, features = ["synth"] }

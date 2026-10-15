@@ -1,0 +1,207 @@
+name: build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  linux:
+    name: Linux (tests, fixtures, CLI, GUI screenshot)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: System libraries for Tauri
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libsoup-3.0-dev xvfb imagemagick
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install pikepdf
+      - name: Unit tests
+        run: cargo test -p lifeboat-core
+      - name: Committed fixtures are exactly what the synth code writes
+        run: |
+          cargo run -p make-fixtures -- fixtures
+          git status --porcelain fixtures
+          test -z "$(git status --porcelain fixtures)"
+      - name: CLI smoke test (batch-convert the synthetic fixtures)
+        run: |
+          cargo build --release -p lifeboat-cli
+          for f in ai pdf svg; do
+            rm -rf "$RUNNER_TEMP/run-$f" && cp -r fixtures "$RUNNER_TEMP/run-$f"
+            ./target/release/lifeboat-cli --format $f --json "$RUNNER_TEMP/cli-$f.json" "$RUNNER_TEMP/run-$f" || true
+            python scripts/check_outputs.py "$RUNNER_TEMP/cli-$f.json" --expect 9,4,1
+          done
+          mkdir -p dist && cp target/release/lifeboat-cli dist/lifeboat-cli-linux-x64
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - run: npm install -g @tauri-apps/cli@2
+      - name: Build the GUI (no bundle)
+        working-directory: app/src-tauri
+        run: tauri build --no-bundle
+      - name: GUI batch mode
+        run: |
+          rm -rf "$RUNNER_TEMP/gui" && cp -r fixtures "$RUNNER_TEMP/gui"
+          ./target/release/lifeboat --batch --report "$RUNNER_TEMP/gui.json" "$RUNNER_TEMP/gui" || true
+          python scripts/check_outputs.py "$RUNNER_TEMP/gui.json" --expect 9,4,1
+      - name: Screenshot of the window (Xvfb)
+        run: |
+          mkdir -p shots-ci
+          xvfb-run -a -s "-screen 0 800x600x24" bash -c '
+            ./target/release/lifeboat & pid=$!
+            sleep 10
+            import -window root shots-ci/linux-window.png
+            kill $pid || true'
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux
+          path: |
+            dist/
+            shots-ci/
+
+  macos:
+    name: macOS (universal .app and .dmg)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with: { targets: "aarch64-apple-darwin,x86_64-apple-darwin" }
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: npm install -g @tauri-apps/cli@2 && pip install pikepdf
+      - name: Build Lifeboat.app and the .dmg (universal, ad-hoc signed)
+        working-directory: app/src-tauri
+        run: tauri build --target universal-apple-darwin --bundles app,dmg
+      - name: Check the bundle
+        run: |
+          B=target/universal-apple-darwin/release/bundle
+          APP="$B/macos/Lifeboat.app"
+          ls -la "$APP/Contents/MacOS" "$B/dmg"
+          BIN="$APP/Contents/MacOS/$(ls "$APP/Contents/MacOS" | head -1)"
+          lipo -archs "$BIN"
+          lipo -archs "$BIN" | grep -q arm64 && lipo -archs "$BIN" | grep -q x86_64
+          codesign -dv --verbose=2 "$APP" 2>&1 | tee codesign.txt
+          grep -q "Signature=adhoc" codesign.txt
+          codesign --verify --deep --strict "$APP"
+          plutil -p "$APP/Contents/Info.plist" | grep -A3 -E "CFBundleDocumentTypes|public.folder|fh9" | head -40
+          echo "BIN=$BIN" >> "$GITHUB_ENV"
+          mkdir -p dist
+          cp "$B"/dmg/*.dmg dist/
+          ditto -c -k --keepParent "$APP" dist/Lifeboat_0.1.0_universal.app.zip
+          ls -la dist
+      - name: GUI batch mode on the runner (the app's own binary)
+        run: |
+          rm -rf "$RUNNER_TEMP/gui" && cp -r fixtures "$RUNNER_TEMP/gui"
+          "$BIN" --batch --report "$RUNNER_TEMP/gui.json" "$RUNNER_TEMP/gui" || true
+          cat "$RUNNER_TEMP/gui.txt"
+          python scripts/check_outputs.py "$RUNNER_TEMP/gui.json" --expect 9,4,1
+          rm -rf "$RUNNER_TEMP/gui-pdf" && cp -r fixtures "$RUNNER_TEMP/gui-pdf"
+          "$BIN" --batch --format pdf --report "$RUNNER_TEMP/gui-pdf.json" "$RUNNER_TEMP/gui-pdf" || true
+          python scripts/check_outputs.py "$RUNNER_TEMP/gui-pdf.json" --expect 9,4,1
+      - name: Screenshot of the window
+        continue-on-error: true
+        run: |
+          mkdir -p shots-ci
+          "$BIN" & pid=$!
+          sleep 10
+          screencapture -x shots-ci/macos-screen.png
+          kill $pid || true
+      - uses: actions/upload-artifact@v4
+        with:
+          name: macos
+          path: |
+            dist/
+            shots-ci/
+
+  windows:
+    name: Windows (installer, MSI, portable .exe)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with: { node-version: "22" }
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: npm install -g @tauri-apps/cli@2; pip install pikepdf
+      - name: Build the installers
+        working-directory: app/src-tauri
+        run: tauri build --bundles nsis,msi
+      - name: Collect
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist | Out-Null
+          Copy-Item target/release/bundle/nsis/*.exe dist/
+          Copy-Item target/release/bundle/msi/*.msi dist/
+          Copy-Item target/release/lifeboat.exe dist/Lifeboat_0.1.0_x64_portable.exe
+          Get-ChildItem dist | Format-Table Name, Length
+      - name: GUI batch mode on the runner (the portable .exe)
+        shell: pwsh
+        run: |
+          foreach ($f in @('ai', 'pdf', 'svg')) {
+            $dir = Join-Path $env:RUNNER_TEMP "gui-$f"
+            Remove-Item -Recurse -Force $dir -ErrorAction SilentlyContinue
+            Copy-Item -Recurse fixtures $dir
+            $report = Join-Path $env:RUNNER_TEMP "gui-$f.json"
+            $p = Start-Process -FilePath dist/Lifeboat_0.1.0_x64_portable.exe -ArgumentList @('--batch', '--format', $f, '--report', "`"$report`"", "`"$dir`"") -Wait -PassThru
+            Write-Host "exit code $($p.ExitCode)"
+            Get-Content ($report -replace '\.json$', '.txt')
+            python scripts/check_outputs.py $report --expect 9,4,1
+            if ($LASTEXITCODE -ne 0) { exit 1 }
+          }
+      - name: Screenshot of the window
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force shots-ci | Out-Null
+          $p = Start-Process -FilePath dist/Lifeboat_0.1.0_x64_portable.exe -PassThru
+          Start-Sleep -Seconds 12
+          Add-Type -AssemblyName System.Windows.Forms, System.Drawing
+          $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
+          $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
+          $g = [System.Drawing.Graphics]::FromImage($bmp)
+          $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("shots-ci/windows-screen.png")
+          Stop-Process -Id $p.Id -Force
+      - uses: actions/upload-artifact@v4
+        with:
+          name: windows
+          path: |
+            dist/
+            shots-ci/
+
+  release:
+    name: Publish the GitHub Release
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux, macos, windows]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { path: artifacts }
+      - name: Create the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ls -R artifacts
+          gh release create "$GITHUB_REF_NAME" \
+            artifacts/macos/dist/* artifacts/windows/dist/* artifacts/linux/dist/* \
+            --title "Lifeboat ${GITHUB_REF_NAME#v}" --notes-file RELEASE_NOTES.md

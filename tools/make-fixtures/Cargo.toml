@@ -1,0 +1,10 @@
+[package]
+name = "make-fixtures"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+publish = false
+description = "Writes the synthetic FreeHand test files in fixtures/ (VectorCraft's synth module; no real user files)"
+
+[dependencies]
+vectorcraft-freehand = { workspace = true, features = ["synth"] }
