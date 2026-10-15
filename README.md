@@ -57,7 +57,7 @@ Click **More info**, then **Run anyway**. You only need to do this once.
 
 ## What it does
 
-<p align="center"><img src="shots/window.png" width="420" alt="Secondhand's window: Drop FreeHand files or folders here"></p>
+<p align="center"><img src="shots/window.png" width="380" alt="Secondhand's window on a Mac: Drop FreeHand files or folders here">&nbsp;<img src="shots/windows-batch-finished.png" width="380" alt="Secondhand on Windows after a batch: 9 files converted, 4 skipped, 1 failed"></p>
 
 - **Drop files or whole folders** on the window, or on the app's icon in the Dock or Finder (Mac),
   or click **Choose files…**. Folders are searched all the way down, so you can drop a whole
