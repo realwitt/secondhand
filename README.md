@@ -177,8 +177,8 @@ Once #2075 is merged, point the three `vectorcraft-*` lines at upstream, using t
 vectorcraft-engine = { git = "https://github.com/storytold/vectorcraft", rev = "<merge commit>" }
 ```
 
-CI also builds the app and the command-line tool on Linux, for testing; they are kept as workflow
-artifacts, not release downloads:
+CI also builds the app on Linux, for testing (kept as a workflow artifact, not packaged). The
+Linux command-line tool, `secondhand-cli-linux-x64`, is on the release page:
 
 <p align="center"><img src="shots/linux-batch-finished.png" width="380" alt="Secondhand on Linux after converting the test drawings"></p>
 
