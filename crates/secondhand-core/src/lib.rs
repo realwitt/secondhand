@@ -1,4 +1,4 @@
-//! Lifeboat's converter: finds FreeHand drawings in what the user dropped, converts each one with
+//! Secondhand's converter: finds FreeHand drawings in what the user dropped, converts each one with
 //! the VectorCraft engine, and writes the result next to the original without overwriting anything.
 //!
 //! Nothing here touches the network, and the original files are only ever read.

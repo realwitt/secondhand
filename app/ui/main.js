@@ -1,4 +1,4 @@
-// Lifeboat's window. All the work happens in the Rust side (lifeboat-core); this only shows it.
+// Secondhand's window. All the work happens in the Rust side (secondhand-core); this only shows it.
 const { invoke } = window.__TAURI__.core;
 const { listen } = window.__TAURI__.event;
 const dialog = window.__TAURI__.dialog;
@@ -103,8 +103,8 @@ window.__TAURI__.webview.getCurrentWebview().onDragDropEvent((ev) => {
   // The drop itself is handled in Rust, so it works the same when the window is busy.
 });
 
-listen('lifeboat://event', (e) => onEvent(e.payload));
-listen('lifeboat://summary', (e) => onSummary(e.payload));
+listen('secondhand://event', (e) => onEvent(e.payload));
+listen('secondhand://summary', (e) => onSummary(e.payload));
 
 // Files dropped on the app icon before this page loaded: replay what already happened.
 invoke('status').then((st) => {

@@ -1,4 +1,4 @@
-"""Checks Lifeboat's outputs: every .ai/.pdf must parse cleanly with qpdf (through pikepdf) and
+"""Checks Secondhand's outputs: every .ai/.pdf must parse cleanly with qpdf (through pikepdf) and
 have pages; prints pages, page sizes and PDF layers (optional content groups), hidden ones marked.
 
 usage: python check_outputs.py REPORT.json [--expect converted,skipped,failed]

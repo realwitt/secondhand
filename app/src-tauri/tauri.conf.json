@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Lifeboat",
+  "productName": "Secondhand",
   "version": "0.1.0",
-  "identifier": "com.eliaswitt.lifeboat",
+  "identifier": "com.eliaswitt.secondhand",
   "build": {
     "frontendDist": "../ui"
   },
@@ -11,7 +11,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Lifeboat",
+        "title": "Secondhand",
         "width": 520,
         "height": 460,
         "minWidth": 420,
@@ -41,7 +41,7 @@
     ],
     "category": "GraphicsAndDesign",
     "shortDescription": "Converts FreeHand 8–MX drawings to .ai, PDF or SVG",
-    "longDescription": "Lifeboat opens FreeHand 8, 9, 10 and MX drawings and saves a PDF-compatible .ai (or PDF, or SVG) next to each one. Not affiliated with Adobe.",
+    "longDescription": "Secondhand opens FreeHand 8, 9, 10 and MX drawings and saves a PDF-compatible .ai (or PDF, or SVG) next to each one. Not affiliated with Adobe.",
     "copyright": "© 2026 Elias Witt. MIT OR Apache-2.0. Built on VectorCraft (MIT OR Apache-2.0).",
     "license": "MIT OR Apache-2.0",
     "licenseFile": "../../LICENSE-MIT",

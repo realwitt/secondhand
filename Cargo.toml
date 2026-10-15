@@ -1,13 +1,13 @@
 [workspace]
 resolver = "2"
-members = ["crates/lifeboat-core", "crates/lifeboat-cli", "tools/make-fixtures", "app/src-tauri"]
-default-members = ["crates/lifeboat-core", "crates/lifeboat-cli"]
+members = ["crates/secondhand-core", "crates/secondhand-cli", "tools/make-fixtures", "app/src-tauri"]
+default-members = ["crates/secondhand-core", "crates/secondhand-cli"]
 
 [workspace.package]
 version = "0.1.0"
 edition = "2024"
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/realwitt/lifeboat"
+repository = "https://github.com/realwitt/secondhand"
 rust-version = "1.95"
 
 [workspace.dependencies]
@@ -16,7 +16,7 @@ rust-version = "1.95"
 vectorcraft-engine = { git = "https://github.com/realwitt/vectorcraft", rev = "6db207b0b9b89eeb7a6865f1f4a1ff6ffac2e7c4" }
 vectorcraft-freehand = { git = "https://github.com/realwitt/vectorcraft", rev = "6db207b0b9b89eeb7a6865f1f4a1ff6ffac2e7c4" }
 vectorcraft-format = { git = "https://github.com/realwitt/vectorcraft", rev = "6db207b0b9b89eeb7a6865f1f4a1ff6ffac2e7c4" }
-lifeboat-core = { path = "crates/lifeboat-core" }
+secondhand-core = { path = "crates/secondhand-core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 

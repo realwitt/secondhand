@@ -1,11 +1,11 @@
-//! `lifeboat-cli [--format ai|pdf|svg] [--json REPORT] PATH…`
+//! `secondhand-cli [--format ai|pdf|svg] [--json REPORT] PATH…`
 //!
 //! Converts every FreeHand drawing in the given files and folders and writes the result next to
 //! each original. Exits 0 when nothing failed, 1 when a file failed, 2 on bad arguments.
 
 use std::path::PathBuf;
 
-use lifeboat_core::{Event, Format, Outcome};
+use secondhand_core::{Event, Format, Outcome};
 
 fn main() {
     let mut format = Format::Ai;
@@ -21,7 +21,7 @@ fn main() {
             Some("--json") => json = Some(args.next().map(PathBuf::from).unwrap_or_else(|| usage("--json needs a file"))),
             Some("--help" | "-h") => usage(""),
             Some("--version" | "-V") => {
-                println!("lifeboat-cli {}", env!("CARGO_PKG_VERSION"));
+                println!("secondhand-cli {}", env!("CARGO_PKG_VERSION"));
                 return;
             }
             _ => paths.push(PathBuf::from(a)),
@@ -30,7 +30,7 @@ fn main() {
     if paths.is_empty() {
         usage("give at least one file or folder");
     }
-    let summary = lifeboat_core::run(&paths, format, |e| match e {
+    let summary = secondhand_core::run(&paths, format, |e| match e {
         Event::Start { total } => eprintln!("{total} file(s) to convert"),
         Event::Begin { index, total, input } => eprintln!("[{}/{total}] {}", index + 1, input.display()),
         Event::Done { outcome, .. } => match outcome {
@@ -51,9 +51,9 @@ fn main() {
 
 fn usage(msg: &str) -> ! {
     if !msg.is_empty() {
-        eprintln!("lifeboat-cli: {msg}\n");
+        eprintln!("secondhand-cli: {msg}\n");
     }
-    eprintln!("usage: lifeboat-cli [--format ai|pdf|svg] [--json REPORT.json] FILE_OR_FOLDER…");
+    eprintln!("usage: secondhand-cli [--format ai|pdf|svg] [--json REPORT.json] FILE_OR_FOLDER…");
     eprintln!("Converts FreeHand 8, 9, 10 and MX drawings; writes Name.ai next to each one, never overwriting.");
     std::process::exit(if msg.is_empty() { 0 } else { 2 });
 }

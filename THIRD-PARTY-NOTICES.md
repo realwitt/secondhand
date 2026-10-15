@@ -1,6 +1,6 @@
 # Third-party notices
 
-Lifeboat includes the following third-party software. Their license texts are in `licenses/`,
+Secondhand includes the following third-party software. Their license texts are in `licenses/`,
 and they ship inside the app.
 
 ## VectorCraft
@@ -11,13 +11,13 @@ The FreeHand reader and the `.ai`/PDF/SVG writers are VectorCraft's
 Copyright (c) 2026 ArtCraft Team and the VectorCraft contributors. Licensed under the MIT License
 or the Apache License, Version 2.0, at your option (`licenses/VectorCraft-LICENSE-MIT.txt`,
 `LICENSE-APACHE`). VectorCraft's own NOTICE, including the material it bundles, is in
-`licenses/VectorCraft-NOTICE.txt`. The parts of it that end up in Lifeboat:
+`licenses/VectorCraft-NOTICE.txt`. The parts of it that end up in Secondhand:
 
 - Source Sans 3, Source Serif 4, Inter and JetBrains Mono, compiled into the text engine. SIL
   Open Font License 1.1 (`licenses/OFL-*.txt`).
 - Adobe's CMap resources, compiled in through the hayro-cmap crate for reading CJK text in PDFs,
   under the BSD 3-Clause License. The full notice is in `licenses/VectorCraft-NOTICE.txt`.
-- The ArtCraft name and logos are VectorCraft's trademarks and are not used by Lifeboat.
+- The ArtCraft name and logos are VectorCraft's trademarks and are not used by Secondhand.
 
 The FreeHand reader was written in a clean-room way from a written description of the format (see
 VectorCraft's `crates/freehand/README.md`). It contains no code from libfreehand or from Adobe.

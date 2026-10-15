@@ -1,4 +1,4 @@
-//! Lifeboat's desktop app: one window to drop FreeHand files and folders on, plus the macOS
+//! Secondhand's desktop app: one window to drop FreeHand files and folders on, plus the macOS
 //! droplet (files dropped on the app icon) and a headless `--batch` mode for scripts and CI.
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
@@ -6,7 +6,7 @@ use std::collections::VecDeque;
 use std::path::PathBuf;
 use std::sync::{Arc, Condvar, Mutex};
 
-use lifeboat_core::{Event, Format, Summary};
+use secondhand_core::{Event, Format, Summary};
 use serde::Serialize;
 use tauri::{AppHandle, Emitter, WindowEvent};
 #[cfg(target_os = "macos")]
@@ -91,7 +91,7 @@ fn worker(app: AppHandle, state: State) {
                 s = state.0.1.wait(s).unwrap_or_else(|e| e.into_inner());
             }
         };
-        let summary = lifeboat_core::run(&paths, format, |e| {
+        let summary = secondhand_core::run(&paths, format, |e| {
             {
                 let mut s = state.lock();
                 if matches!(e, Event::Start { .. }) {
@@ -100,10 +100,10 @@ fn worker(app: AppHandle, state: State) {
                 }
                 s.events.push(e.clone());
             }
-            let _ = app.emit("lifeboat://event", e);
+            let _ = app.emit("secondhand://event", e);
         });
         state.lock().summary = Some(summary.clone());
-        let _ = app.emit("lifeboat://summary", &summary);
+        let _ = app.emit("secondhand://summary", &summary);
     }
 }
 
@@ -112,7 +112,7 @@ fn arg_paths(args: &[String]) -> Vec<PathBuf> {
     args.iter().filter(|a| !a.starts_with("-psn_") && !a.starts_with("--")).map(PathBuf::from).collect()
 }
 
-/// `Lifeboat --batch [--format ai|pdf|svg] [--report REPORT.json] PATH…`: converts without a
+/// `Secondhand --batch [--format ai|pdf|svg] [--report REPORT.json] PATH…`: converts without a
 /// window and exits 0 when nothing failed, 1 otherwise. The report is a JSON file, because a
 /// Windows GUI program has no console to print to.
 fn batch(args: &[String]) -> i32 {
@@ -128,7 +128,7 @@ fn batch(args: &[String]) -> i32 {
             p => paths.push(PathBuf::from(p)),
         }
     }
-    let summary = lifeboat_core::run(&paths, format, |_| {});
+    let summary = secondhand_core::run(&paths, format, |_| {});
     let text = summary.report();
     print!("{text}");
     if let Some(r) = report {
@@ -170,10 +170,10 @@ fn main() {
             }
         })
         .build(tauri::generate_context!())
-        .expect("Lifeboat couldn't start its window");
+        .expect("Secondhand couldn't start its window");
     #[cfg_attr(not(target_os = "macos"), allow(unused_variables))]
     app.run(move |handle, event| {
-        // macOS: files and folders dropped on the app icon, or opened with Lifeboat.
+        // macOS: files and folders dropped on the app icon, or opened with Secondhand.
         #[cfg(target_os = "macos")]
         if let RunEvent::Opened { urls } = &event {
             let paths: Vec<PathBuf> = urls.iter().filter_map(|u| u.to_file_path().ok()).collect();

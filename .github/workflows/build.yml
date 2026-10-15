@@ -30,7 +30,7 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install pikepdf
       - name: Unit tests
-        run: cargo test -p lifeboat-core
+        run: cargo test -p secondhand-core
       - name: Committed fixtures are exactly what the synth code writes
         run: |
           cargo run -p make-fixtures -- fixtures
@@ -38,13 +38,13 @@ jobs:
           test -z "$(git status --porcelain fixtures)"
       - name: CLI smoke test (batch-convert the synthetic fixtures)
         run: |
-          cargo build --release -p lifeboat-cli
+          cargo build --release -p secondhand-cli
           for f in ai pdf svg; do
             rm -rf "$RUNNER_TEMP/run-$f" && cp -r fixtures "$RUNNER_TEMP/run-$f"
-            ./target/release/lifeboat-cli --format $f --json "$RUNNER_TEMP/cli-$f.json" "$RUNNER_TEMP/run-$f" || true
+            ./target/release/secondhand-cli --format $f --json "$RUNNER_TEMP/cli-$f.json" "$RUNNER_TEMP/run-$f" || true
             python scripts/check_outputs.py "$RUNNER_TEMP/cli-$f.json" --expect 9,4,1
           done
-          mkdir -p dist && cp target/release/lifeboat-cli dist/lifeboat-cli-linux-x64
+          mkdir -p dist && cp target/release/secondhand-cli dist/secondhand-cli-linux-x64
       - uses: actions/setup-node@v4
         with: { node-version: "22" }
       - run: npm install -g @tauri-apps/cli@2
@@ -54,9 +54,9 @@ jobs:
       - name: GUI batch mode
         run: |
           rm -rf "$RUNNER_TEMP/gui" && cp -r fixtures "$RUNNER_TEMP/gui"
-          ./target/release/lifeboat --batch --report "$RUNNER_TEMP/gui.json" "$RUNNER_TEMP/gui" || true
+          ./target/release/secondhand --batch --report "$RUNNER_TEMP/gui.json" "$RUNNER_TEMP/gui" || true
           python scripts/check_outputs.py "$RUNNER_TEMP/gui.json" --expect 9,4,1
-          mkdir -p gui-bin && cp target/release/lifeboat gui-bin/lifeboat-gui-linux-x64
+          mkdir -p gui-bin && cp target/release/secondhand gui-bin/secondhand-gui-linux-x64
       - name: Screenshot of the window (Xvfb)
         env:
           WEBKIT_DISABLE_COMPOSITING_MODE: "1"
@@ -66,12 +66,12 @@ jobs:
           mkdir -p shots-ci
           rm -rf "$RUNNER_TEMP/shot" && cp -r fixtures "$RUNNER_TEMP/shot"
           xvfb-run -a -s "-screen 0 800x600x24" bash -c '
-            ./target/release/lifeboat & pid=$!
+            ./target/release/secondhand & pid=$!
             sleep 10
-            xwininfo -root -tree | grep -i -E "lifeboat|[0-9]+x[0-9]+" | head -5 || true
+            xwininfo -root -tree | grep -i -E "secondhand|[0-9]+x[0-9]+" | head -5 || true
             import -window root shots-ci/linux-window.png
             kill $pid || true
-            ./target/release/lifeboat "$RUNNER_TEMP/shot" & pid=$!
+            ./target/release/secondhand "$RUNNER_TEMP/shot" & pid=$!
             sleep 12
             import -window root shots-ci/linux-batch.png
             kill $pid || true'
@@ -97,13 +97,13 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: npm install -g @tauri-apps/cli@2 && pip install pikepdf
-      - name: Build Lifeboat.app and the .dmg (universal, ad-hoc signed)
+      - name: Build Secondhand.app and the .dmg (universal, ad-hoc signed)
         working-directory: app/src-tauri
         run: tauri build --target universal-apple-darwin --bundles app,dmg
       - name: Check the bundle
         run: |
           B=target/universal-apple-darwin/release/bundle
-          APP="$B/macos/Lifeboat.app"
+          APP="$B/macos/Secondhand.app"
           ls -la "$APP/Contents/MacOS" "$B/dmg"
           BIN="$APP/Contents/MacOS/$(ls "$APP/Contents/MacOS" | head -1)"
           lipo -archs "$BIN"
@@ -115,7 +115,7 @@ jobs:
           echo "BIN=$BIN" >> "$GITHUB_ENV"
           mkdir -p dist
           cp "$B"/dmg/*.dmg dist/
-          ditto -c -k --keepParent "$APP" dist/Lifeboat_0.1.0_universal.app.zip
+          ditto -c -k --keepParent "$APP" dist/Secondhand_0.1.0_universal.app.zip
           ls -la dist
       - name: GUI batch mode on the runner (the app's own binary)
         run: |
@@ -168,7 +168,7 @@ jobs:
           New-Item -ItemType Directory -Force dist | Out-Null
           Copy-Item target/release/bundle/nsis/*.exe dist/
           Copy-Item target/release/bundle/msi/*.msi dist/
-          Copy-Item target/release/lifeboat.exe dist/Lifeboat_0.1.0_x64_portable.exe
+          Copy-Item target/release/secondhand.exe dist/Secondhand_0.1.0_x64_portable.exe
           Get-ChildItem dist | Format-Table Name, Length
       - name: GUI batch mode on the runner (the portable .exe)
         shell: pwsh
@@ -178,7 +178,7 @@ jobs:
             Remove-Item -Recurse -Force $dir -ErrorAction SilentlyContinue
             Copy-Item -Recurse fixtures $dir
             $report = Join-Path $env:RUNNER_TEMP "gui-$f.json"
-            $p = Start-Process -FilePath dist/Lifeboat_0.1.0_x64_portable.exe -ArgumentList @('--batch', '--format', $f, '--report', "`"$report`"", "`"$dir`"") -Wait -PassThru
+            $p = Start-Process -FilePath dist/Secondhand_0.1.0_x64_portable.exe -ArgumentList @('--batch', '--format', $f, '--report', "`"$report`"", "`"$dir`"") -Wait -PassThru
             Write-Host "exit code $($p.ExitCode)"
             Get-Content ($report -replace '\.json$', '.txt')
             python scripts/check_outputs.py $report --expect 9,4,1
@@ -189,7 +189,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force shots-ci | Out-Null
-          $p = Start-Process -FilePath dist/Lifeboat_0.1.0_x64_portable.exe -PassThru
+          $p = Start-Process -FilePath dist/Secondhand_0.1.0_x64_portable.exe -PassThru
           Start-Sleep -Seconds 12
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
           $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
@@ -200,7 +200,7 @@ jobs:
           Stop-Process -Id $p.Id -Force
           $shot = Join-Path $env:RUNNER_TEMP "shot"
           Copy-Item -Recurse fixtures $shot
-          $p = Start-Process -FilePath dist/Lifeboat_0.1.0_x64_portable.exe -ArgumentList @("`"$shot`"") -PassThru
+          $p = Start-Process -FilePath dist/Secondhand_0.1.0_x64_portable.exe -ArgumentList @("`"$shot`"") -PassThru
           Start-Sleep -Seconds 12
           $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
           $bmp.Save("$PWD/shots-ci/windows-batch.png")
@@ -230,4 +230,4 @@ jobs:
           ls -R artifacts
           gh release create "$GITHUB_REF_NAME" \
             artifacts/macos/dist/* artifacts/windows/dist/* artifacts/linux/dist/* \
-            --title "Lifeboat ${GITHUB_REF_NAME#v}" --notes-file RELEASE_NOTES.md
+            --title "Secondhand ${GITHUB_REF_NAME#v}" --notes-file RELEASE_NOTES.md
